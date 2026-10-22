@@ -1,0 +1,16 @@
+.busr-wrap .busr-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;margin-top:12px}
+@media (max-width:960px){.busr-wrap .busr-grid{grid-template-columns:1fr}}
+.busr-step{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:16px 20px;margin-bottom:16px}
+.busr-step h2{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:10px}
+.busr-num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:#2271b1;color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.busr-step.is-done .busr-num{background:#00a32a}
+.busr-list li{margin-bottom:6px}
+.busr-inline{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
+.busr-inline label{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.busr-inline input.small-text{width:86px}
+.busr-dims{display:inline-flex;align-items:center;gap:4px}.busr-dims input.small-text{width:64px}
+.busr-result{display:inline-block;margin-top:8px}
+.busr-result.is-ok{color:#00a32a}.busr-result.is-error{color:#d63638}
+.busr-result table{margin-top:8px;border-collapse:collapse}.busr-result td,.busr-result th{padding:4px 12px 4px 0;text-align:left}
+.busr-side{background:#f6f7f7;border:1px solid #dcdcde;border-radius:6px;padding:16px 20px}
+.busr-side h3{margin-top:0}.busr-side ul{margin:0 0 12px}.busr-side li{margin-bottom:6px}.busr-help li{font-size:12px;color:#50575e}
