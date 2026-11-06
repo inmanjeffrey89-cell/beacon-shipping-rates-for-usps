@@ -68,10 +68,16 @@ class API {
 	 * @param bool  $intl     International endpoint?
 	 * @return array|\WP_Error list of ['mailClass','productName','sku','price','indicator'] (cheapest per class), or error.
 	 */
-	public static function rates( array $payload, $intl = false ) {
+	/** The cache key checkout reads for this payload; the setup page's rate test writes the same one. */
+	public static function cache_key( array $payload, $intl ) {
 		/** Pro hook: which USPS rate indicators count as offerable (adds flat-rate boxes etc.). */
 		$indicators = apply_filters( 'busr_parcel_indicators', self::PARCEL_INDICATORS, $intl );
-		$key        = Cache::key( $payload + array( '_intl' => $intl ? 1 : 0, '_ind' => implode( ',', $indicators ) ) );
+		return Cache::key( $payload + array( '_intl' => $intl ? 1 : 0, '_ind' => implode( ',', $indicators ) ) );
+	}
+
+	public static function rates( array $payload, $intl = false ) {
+		$indicators = apply_filters( 'busr_parcel_indicators', self::PARCEL_INDICATORS, $intl );
+		$key        = self::cache_key( $payload, $intl );
 		$hit = Cache::get( $key );
 		if ( $hit ) {
 			Cache::bump( 'cache_hit' );

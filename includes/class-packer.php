@@ -11,6 +11,23 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Packer {
 	const MAX_LB = 70.0;
+	/** USPS rates these as domestic mail (with a ZIP code). */
+	const DOMESTIC = array( 'US', 'PR', 'VI', 'GU', 'AS', 'MP', 'UM' );
+
+	public static function is_domestic( $country ) {
+		$c = strtoupper( (string) $country );
+		return '' === $c || in_array( $c, self::DOMESTIC, true );
+	}
+
+	/** True when one unit in the cart is over the USPS parcel limit (70 lb): USPS refuses it, so no USPS rate is offered. */
+	public static function too_heavy( array $contents, array $opts ) {
+		foreach ( self::items( $contents, $opts ) as $it ) {
+			if ( $it['weight'] > self::MAX_LB ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * @param array $package  WC shipping package.
@@ -20,7 +37,7 @@ class Packer {
 	public static function build( array $package, array $opts ) {
 		$dest    = $package['destination'];
 		$country = isset( $dest['country'] ) ? strtoupper( $dest['country'] ) : 'US';
-		$intl    = ! in_array( $country, array( 'US', 'PR', 'VI', 'GU', 'AS', 'MP', 'UM' ), true );
+		$intl    = ! self::is_domestic( $country );
 		$boxes   = self::boxes( $package['contents'], $opts );
 		$out     = array();
 		foreach ( $boxes as $b ) {
@@ -53,26 +70,7 @@ class Packer {
 	/** Group cart lines into boxes according to the packing strategy. Each box: weight(lb), length/width/height(in). */
 	public static function boxes( array $contents, array $opts ) {
 		$strategy = isset( $opts['strategy'] ) ? $opts['strategy'] : 'combined';
-		$items    = array();
-		foreach ( $contents as $line ) {
-			if ( empty( $line['data'] ) || ! is_object( $line['data'] ) ) {
-				continue;
-			}
-			$product = $line['data'];
-			if ( ! $product->needs_shipping() ) {
-				continue;
-			}
-			$qty = max( 1, (int) $line['quantity'] );
-			$w   = self::lb( $product->get_weight(), $opts['default_weight'] );
-			$l   = self::inch( $product->get_length(), $opts['default_length'] );
-			$wd  = self::inch( $product->get_width(), $opts['default_width'] );
-			$h   = self::inch( $product->get_height(), $opts['default_height'] );
-			$items[] = array(
-				'qty'    => $qty,
-				'weight' => $w,
-				'dims'   => array( $l, $wd, $h ),
-			);
-		}
+		$items    = self::items( $contents, $opts );
 		if ( ! $items ) {
 			return array();
 		}
@@ -122,10 +120,35 @@ class Packer {
 		return $boxes;
 	}
 
+	/** Shippable cart lines as ['qty', 'weight' (lb per unit), 'dims' (in)]. */
+	private static function items( array $contents, array $opts ) {
+		$items = array();
+		foreach ( $contents as $line ) {
+			if ( empty( $line['data'] ) || ! is_object( $line['data'] ) ) {
+				continue;
+			}
+			$product = $line['data'];
+			if ( ! $product->needs_shipping() ) {
+				continue;
+			}
+			$qty = max( 1, (int) $line['quantity'] );
+			$w   = self::lb( $product->get_weight(), $opts['default_weight'] );
+			$l   = self::inch( $product->get_length(), $opts['default_length'] );
+			$wd  = self::inch( $product->get_width(), $opts['default_width'] );
+			$h   = self::inch( $product->get_height(), $opts['default_height'] );
+			$items[] = array(
+				'qty'    => $qty,
+				'weight' => $w,
+				'dims'   => array( $l, $wd, $h ),
+			);
+		}
+		return $items;
+	}
+
 	private static function box( $weight, array $dims ) {
 		rsort( $dims );
 		return array(
-			'weight' => min( self::MAX_LB, (float) $weight ),
+			'weight' => (float) $weight,
 			'length' => (float) $dims[0],
 			'width'  => (float) $dims[1],
 			'height' => (float) $dims[2],

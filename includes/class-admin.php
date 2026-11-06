@@ -127,8 +127,8 @@ class Admin {
 	}
 
 	public static function ajax_test_rate() {
-		check_ajax_referer( 'busr_ajax', 'nonce' );
-		self::guard();
+		self::guard(); // checks the busr_ajax nonce and the capability.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- nonce verified in self::guard().
 		$origin  = isset( $_POST['origin'] ) ? sanitize_text_field( wp_unslash( $_POST['origin'] ) ) : '';
 		$dest    = isset( $_POST['dest'] ) ? sanitize_text_field( wp_unslash( $_POST['dest'] ) ) : '';
 		$country = isset( $_POST['country'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_POST['country'] ) ) ) : 'US';
@@ -137,7 +137,8 @@ class Admin {
 		foreach ( array( 'length', 'width', 'height' ) as $k ) {
 			$dims[ $k ] = isset( $_POST[ $k ] ) ? max( 0.1, (float) $_POST[ $k ] ) : 6;
 		}
-		$intl    = ! in_array( $country, array( 'US', '' ), true );
+		$intl    = ! Packer::is_domestic( $country );
+		// phpcs:enable
 		$payload = array(
 			'originZIPCode' => Packer::zip5( $origin ? $origin : get_option( 'woocommerce_store_postcode', '' ) ),
 			'weight'        => max( 0.01, $weight ),
@@ -167,7 +168,7 @@ class Admin {
 		if ( ! $rates ) {
 			wp_send_json_error( array( 'message' => __( 'USPS answered but returned no parcel rates for that package. Try a different weight or size.', 'beacon-shipping-rates-for-usps' ) ) );
 		}
-		Cache::set( Cache::key( $payload + array( '_intl' => $intl ? 1 : 0 ) ), $rates );
+		Cache::set( API::cache_key( $payload, $intl ), $rates );
 		wp_send_json_success(
 			array(
 				'rates' => array_map(
@@ -312,8 +313,8 @@ class Admin {
 			<aside class="busr-side">
 				<h3><?php esc_html_e( 'Status', 'beacon-shipping-rates-for-usps' ); ?></h3>
 				<ul>
-					<li><?php echo $has ? '✅ ' . esc_html__( 'Keys saved', 'beacon-shipping-rates-for-usps' ) : '⬜ ' . esc_html__( 'Keys not set', 'beacon-shipping-rates-for-usps' ); ?></li>
-					<li><?php echo 'yes' === $s['sandbox'] ? '🧪 ' . esc_html__( 'Test environment', 'beacon-shipping-rates-for-usps' ) : '🟢 ' . esc_html__( 'Production USPS', 'beacon-shipping-rates-for-usps' ); ?></li>
+					<li><?php echo $has ? esc_html__( 'Keys saved', 'beacon-shipping-rates-for-usps' ) : esc_html__( 'Keys not set', 'beacon-shipping-rates-for-usps' ); ?></li>
+					<li><?php echo 'yes' === $s['sandbox'] ? esc_html__( 'Test environment', 'beacon-shipping-rates-for-usps' ) : esc_html__( 'Production USPS', 'beacon-shipping-rates-for-usps' ); ?></li>
 					<li><?php echo esc_html( sprintf( /* translators: 1 calls, 2 ceiling */ __( 'Live calls this hour: %1$d of %2$d', 'beacon-shipping-rates-for-usps' ), Cache::calls_this_hour(), (int) $s['quota_ceiling'] ) ); ?></li>
 					<li><?php echo esc_html( sprintf( /* translators: 1 hits, 2 live, 3 stale, 4 skipped */ __( 'Today: %1$d from cache · %2$d live · %3$d stale-served · %4$d quota-skipped', 'beacon-shipping-rates-for-usps' ), (int) ( $st['cache_hit'] ?? 0 ), (int) ( $st['live_ok'] ?? 0 ), (int) ( $st['stale_served'] ?? 0 ), (int) ( $st['quota_skip'] ?? 0 ) ) ); ?></li>
 					<li><?php echo esc_html( ! empty( $st['last_ok'] ) ? sprintf( /* translators: %s time ago */ __( 'Last successful USPS call: %s ago', 'beacon-shipping-rates-for-usps' ), human_time_diff( (int) $st['last_ok'] ) ) : __( 'No successful USPS call yet', 'beacon-shipping-rates-for-usps' ) ); ?></li>

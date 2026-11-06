@@ -16,13 +16,17 @@ class Cache {
 	const STALE_DAYS = 7;
 	const STATS      = 'busr_stats';
 
-	/** Build a cache key from the request payload, rounding weight/dims so near-identical carts share an entry. */
+	/**
+	 * Build a cache key from the request payload. Weight is keyed in whole ounces (rounded up, like USPS), so carts in
+	 * the same ounce share an entry but 1.96 lb and 2.04 lb (different pound tiers) never do. Dims round to 0.5 in.
+	 * The USPS environment is part of the key: test prices are never served once the test environment is off.
+	 */
 	public static function key( array $payload ) {
 		$p = $payload;
-		foreach ( array( 'weight' ) as $k ) {
-			if ( isset( $p[ $k ] ) ) {
-				$p[ $k ] = round( (float) $p[ $k ] * 10 ) / 10; }
+		if ( isset( $p['weight'] ) ) {
+			$p['weight'] = (int) ceil( round( (float) $p['weight'] * 16, 6 ) );
 		}
+		$p['_env'] = 'yes' === Settings::get( 'sandbox' ) ? 'tem' : 'prod';
 		foreach ( array( 'length', 'width', 'height' ) as $k ) {
 			if ( isset( $p[ $k ] ) ) {
 				$p[ $k ] = round( (float) $p[ $k ] * 2 ) / 2; }

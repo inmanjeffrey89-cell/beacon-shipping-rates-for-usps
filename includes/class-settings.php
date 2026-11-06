@@ -56,6 +56,8 @@ class Settings {
 			}
 		}
 		update_option( self::OPTION, $clean, false );
+		// Environment, price type and keys all change the prices: never serve a price cached under the old settings.
+		Cache::flush();
 		return $clean;
 	}
 

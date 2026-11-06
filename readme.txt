@@ -4,7 +4,7 @@ Tags: usps, shipping rates, woocommerce shipping, live shipping rates, shipping
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,6 +72,13 @@ This plugin connects to the **USPS APIs** (operated by the United States Postal 
 2. Test the connection and get a real USPS rate before you touch a shipping zone.
 
 == Changelog ==
+
+= 0.1.5 =
+* Fix: after you turn the USPS test environment off, checkout no longer shows cached test prices. Saving the settings starts a fresh rate cache.
+* Fix: packages just under and just over a pound boundary (1.96 lb and 2.04 lb) no longer share a cached price.
+* Fix: an item over the USPS 70 lb limit gets no USPS rate instead of the 70 lb price.
+* Fix: Puerto Rico, the US Virgin Islands, Guam, American Samoa and the Northern Mariana Islands are treated as domestic everywhere, and no USPS call is made before the customer enters a ZIP code.
+* Fix: a rate test on the setup page now warms the same cache checkout uses.
 
 = 0.1.4 =
 * Fix: the setup page rate test now names Library Mail and Media Mail (USPS returns them without a product name).

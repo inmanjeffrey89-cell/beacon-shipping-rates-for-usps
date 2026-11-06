@@ -237,10 +237,14 @@ class Method extends \WC_Shipping_Method {
 
 	public function calculate_shipping( $package = array() ) {
 		$dest = isset( $package['destination'] ) ? $package['destination'] : array();
-		if ( empty( $dest['postcode'] ) && ( empty( $dest['country'] ) || 'US' === $dest['country'] ) ) {
+		if ( empty( $dest['postcode'] ) && Packer::is_domestic( isset( $dest['country'] ) ? $dest['country'] : '' ) ) {
 			return; // no ZIP yet (address form still being filled in)
 		}
 		$opts = $this->opts();
+		if ( Packer::too_heavy( isset( $package['contents'] ) ? $package['contents'] : array(), $opts ) ) {
+			API::log( 'an item is over the USPS 70 lb limit: no USPS rate offered for this cart' );
+			return;
+		}
 		if ( '' === Packer::zip5( $opts['origin_zip'] ) ) {
 			API::log( 'no ship-from ZIP: set the store address or the method\'s origin ZIP' );
 			$this->maybe_fallback();

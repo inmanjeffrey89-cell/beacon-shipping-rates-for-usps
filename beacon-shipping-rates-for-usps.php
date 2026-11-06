@@ -3,7 +3,7 @@
  * Plugin Name:       Beacon Shipping Rates for USPS
  * Plugin URI:        https://wordpress.org/plugins/beacon-shipping-rates-for-usps/
  * Description:       Live USPS shipping rates at checkout that keep working: guided USPS API setup, cached rates that respect the USPS hourly quota, and a fallback so checkout never breaks. Domestic and international, all free.
- * Version:           0.1.4
+ * Version:           0.1.5
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -15,7 +15,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
 
-define( 'BUSR_VERSION', '0.1.4' );
+define( 'BUSR_VERSION', '0.1.5' );
 define( 'BUSR_FILE', __FILE__ );
 define( 'BUSR_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BUSR_URL', plugin_dir_url( __FILE__ ) );
